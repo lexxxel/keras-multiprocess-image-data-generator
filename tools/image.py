@@ -864,14 +864,14 @@ class ImageDataGenerator(object):
             x = ax
 
         if self.featurewise_center:
-            self.mean = np.mean(x, axis=(0, self.row_axis, self.col_axis))
+            self.mean = np.mean(x, axis=(0, self.row_axis, self.col_axis), dtype=np.float128).astype(K.floatx())
             broadcast_shape = [1, 1, 1]
             broadcast_shape[self.channel_axis - 1] = x.shape[self.channel_axis]
             self.mean = np.reshape(self.mean, broadcast_shape)
             x -= self.mean
 
         if self.featurewise_std_normalization:
-            self.std = np.std(x, axis=(0, self.row_axis, self.col_axis))
+            self.std = np.std(x, axis=(0, self.row_axis, self.col_axis), dtype=np.float128).astype(K.floatx())
             broadcast_shape = [1, 1, 1]
             broadcast_shape[self.channel_axis - 1] = x.shape[self.channel_axis]
             self.std = np.reshape(self.std, broadcast_shape)
