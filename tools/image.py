@@ -631,6 +631,7 @@ class ImageDataGenerator(object):
                             save_to_dir=None,
                             save_prefix='',
                             save_format='png',
+                            indices=None,
                             follow_links=False):
         return DirectoryIterator(
             directory, self,
@@ -642,6 +643,7 @@ class ImageDataGenerator(object):
             save_prefix=save_prefix,
             save_format=save_format,
             follow_links=follow_links,
+            indices=indices,
             pool=self.pool)
 
     def pipeline(self):
@@ -1187,6 +1189,7 @@ class DirectoryIterator(Iterator):
                  data_format=None,
                  save_to_dir=None, save_prefix='', save_format='png',
                  follow_links=False,
+                 indices=None,
                  pool=None):
         if data_format is None:
             data_format = K.image_data_format()
@@ -1248,6 +1251,7 @@ class DirectoryIterator(Iterator):
         results = []
 
         self.filenames = []
+
         self.classes = np.zeros((self.samples,), dtype='int32')
         i = 0
         for dirpath in (os.path.join(directory, subdir) for subdir in classes):
@@ -1259,8 +1263,21 @@ class DirectoryIterator(Iterator):
             self.classes[i:i + len(classes)] = classes
             self.filenames += filenames
             i += len(classes)
+
         pool.close()
         pool.join()
+
+        if indices is not None:
+            if self.samples <= np.max(indices):
+                raise RuntimeError("to many indices to filter samples!")
+
+            self.classes = self.classes[indices]
+            self.filenames = np.array(self.filenames)[indices].tolist()
+
+            self.samples = len(self.filenames)
+
+            print('Use %d images, filtered by index.' % self.samples)
+
         super(DirectoryIterator, self).__init__(self.samples, batch_size, shuffle, seed)
 
     def next(self):
